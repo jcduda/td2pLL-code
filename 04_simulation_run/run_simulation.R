@@ -9,14 +9,14 @@
 # Parameter of interest is the ED50 (dose where 50% of effect is obtained).
 
 # Performance goal with which we compare the methods are based
-# on convergence-problem rates and how accurate the ED50 is calculated.
-# Note: Convergence problems not prominent anymore
+# on how accurate the ED50 is calculated.
 
 # Primary Performance Measures:
 # AMAFC (Average Mean Absolute Folg Change)
 # AMAcc(Average Mean Accepted)
+# Note: AMAcc not used in publication.
 
-# Secondary Performance Measures:
+# Secondary Performance Measures (Note: Not used for publication):
 # Convergence-problems rates
 
 # The simulation is run on LiDo3 of the TU Dortmund University
@@ -350,9 +350,9 @@ summarizeExperiments(by = c("problem", "algorithm",
                             "model_id",
                             "always", "noise_id", "spacing_id", "n_times_id", "n_obs_id"))
 
-############################
-# testing before submission
-############################
+######################################
+# Optional: testing before submission
+######################################
 
 # model_id = "M1"; noise_id= "N1"; spacing_id = "equ"; n_times_id = 3; n_obs_id = 216
 # easy scenario: Clear time-dependency, little noise, large n
@@ -433,6 +433,8 @@ testJob(id = id)
 # Chunk and submit
 ######################################
 
+# Put the many jobs into chunks to speed up the computing
+
 all_jobs <- findJobs()
 
 # for minimal simulation, remove following row that chunks the jobs
@@ -449,7 +451,7 @@ getStatus()
 # Save results
 ################
 
-# in case I return to session (delete later)
+# In case you return to the session on a HPC cluster, you may need something like this
 # loadRegistry(file.dir = "./04_simulation_run/registry/",
 # writeable = TRUE, conf.file = "/work/smjududa/.batchtools.conf.R")
 

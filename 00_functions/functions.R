@@ -1,6 +1,10 @@
-########################################
-# functions for the ext3pLL simulation #
-########################################
+#######################################
+# functions for the td2pLL simulation #
+#######################################
+
+####################
+# Required packages
+####################
 
 library(dplyr)
 library(DoseFinding)
@@ -8,11 +12,33 @@ library(ICAOD)
 library(tidyr)
 library(plotly)
 library(drc)
+
+# To install the td2pLL package:
+library(devtools)
+devtools::install_github("jcduda/td2pLL")
 library(td2pLL)
 
-# This function is not included in the td2pLL package, as it is tailored
-# to the simulation study of duda et al. (2021).
-# TODO: Add proper function description
+
+#####################
+# Required functions
+#####################
+
+# This function is not included in the td2pLL package. It is tailored
+# to the simulations study
+
+# Function fit_sep_2pLL
+#
+# Fit separate 2pLL curves to a time-dose-response data set where the
+# upper asymptote is fixed to 100 and the lower to 0.
+# The functions uses the drc::drm() function.
+# As numerical algorithm, the function first uses Nelder-Mead.
+# If this fails, it uses BFGS.
+#
+# Input:
+# data - data.frame with numerical variables dose, time, resp.
+#
+# Output: A drm-object generated with drc::drm()
+
 
 
 fit_sep_2pLL <- function(data){
@@ -165,7 +191,7 @@ generate_data <- function(model, noise_id, expDes){
   # Divide by resulting left (upper) asymptote
   all_times <- unique(res_pre$time)
   
-  # get left asymptote (e0) or ach exposure time
+  # get left asymptote (e0) of each exposure time
   help_left_asymp <- sapply(all_times, function(curr_time){
     c(time = curr_time,
       fitMod(dose, resp,
