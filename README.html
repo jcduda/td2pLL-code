@@ -174,7 +174,46 @@ pre code {
 <div id="td2pll-code" class="section level1">
 <h1>td2pLL-code</h1>
 <p>Code to reproduce the simulation results of td2pLL: An intuitive time-dose-response model.</p>
-<p>Maintainer: Julia Duda (contact: {<a href="mailto:duda@statistik.tu-dortmund.de" class="email">duda@statistik.tu-dortmund.de</a>})</p>
+<p>Maintainer: Julia Duda (contact: <a href="mailto:duda@statistik.tu-dortmund.de" class="email">duda@statistik.tu-dortmund.de</a>)</p>
+<p>To reproduce the results, follow these steps</p>
+<div id="step-0" class="section level2">
+<h2>Step 0</h2>
+<p>Download the repository and set the working directory to where the files are.</p>
+</div>
+<div id="step-1-functions-and-packages" class="section level2">
+<h2>Step 1: Functions and packages</h2>
+<p>Open and run 00_functions/functions.R. to load required packages and source functions needed to the simulation.</p>
+<p>Note that you might need to install some package first before you can use them from your library.</p>
+</div>
+<div id="step-2-pre-process-raw-data-optional" class="section level2">
+<h2>Step 2: Pre-process raw data (Optional)</h2>
+<p>The raw data are stored in 01_raw_data. This is the format available for download in the original publication from Gu et al. 2018 (doi: <a href="https://doi.org/10.1007/s00204-018-2302-0" class="uri">https://doi.org/10.1007/s00204-018-2302-0</a>).</p>
+<p>To pre-process the data (normalize with negative control response mean and rescale with initial 4pLL fit upper asymptotes),</p>
+<ul>
+<li>open an run 02_data_prep/prepare_data.R to</li>
+<li>generate data_refit_prep.rds</li>
+</ul>
+<p>This step is optional because the pre-processed data are already available. However, feel free to re-generate them or look at the pre-processing code.</p>
+</div>
+<div id="step-3-simulation-preparation-optional" class="section level2">
+<h2>Step 3: Simulation preparation (Optional)</h2>
+<p>This step is optional, because the simulation preparation files are already available. However, feel free to re-generate them or look at the code.</p>
+<p>To do so, open and run the following R-files:</p>
+<ul>
+<li>03_simulation_prep/01_choose_true_models.R</li>
+<li>03_simulation_prep/02_choose_experimental_designs.R</li>
+<li>03_simulation_prep/03_choose_sd_noise.R</li>
+</ul>
+<p>For details and the genrated files, open the 03_simulation_prep/README.txt.</p>
+<p>Note: The optimal design considerations were not of interest for the publication of the td2pLL model of Duda et al. (2022) and can be ignored.</p>
+</div>
+<div id="step-4-run-the-simulation-optional" class="section level2">
+<h2>Step 4: Run the simulation (Optional)</h2>
+<p>Again, this step is optional as the simulation results are available. However, fell free to re-generate them or look at the code.</p>
+<p>Note that the simulation was run on a high performance computing (HPC) cluster LiDo 3 of the TU Dortmund Unversity with the help of the R package batchtools for convenient batchjob organization.</p>
+<p>This means that if you run the code on your local computer, it might take very long. And if you want to re-run on another HPC cluster, make sure to setup the configuration files properly.</p>
+<p>Note that in the code, the model M1 means string time-dependency, M2 is medium/small time-dependency and M3 means no time-dependency. The naming was changed in the manuscript.</p>
+</div>
 </div>
 
 
