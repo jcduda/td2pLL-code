@@ -9,6 +9,8 @@ This directory requires:
 Based on the pre-processed data of Gu et al., the true models for the simulation (M1, M2 and M3),
 as well as the considered designs and the added noise are calculated.
 
+Note: In the publication the following model-renaming applies: M1 became M2, M2 remains M2 and M3 became M0.
+
 The scripts have to be run in the following order:
 	- 01_choose_true_models
 		- requires:
