@@ -14,7 +14,8 @@
 # Primary Performance Measures:
 # AMAFC (Average Mean Absolute Folg Change)
 # AMAcc(Average Mean Accepted)
-# Note: AMAcc not used in publication.
+
+# Note: AMAcc not used in td2pLL publication.
 
 # Secondary Performance Measures (Note: Not used for publication):
 # Convergence-problems rates
@@ -32,12 +33,6 @@
 
 
 library(batchtools)
-#############
-# if on LiDo (set working directory accordingly)
-#############
-
-if(getwd() == "/home/smjududa") setwd("/work/smjududa/Projekte/exp_dose_resp/")
-
 
 
 # Considerations for using batchtools: Prepare Registry
@@ -54,43 +49,45 @@ reg = makeExperimentRegistry(file.dir = "./04_simulation_run/registry",
 # Data Generation  #
 ####################
 
-# for data generation, the factors 
+# Note: Here M1 = strong, M2 = small/medium and M3 = strong time-dependency
+# Note: Optimal designs are not considered in the td2pLL-publication,
+#       only the log-equidistant ("equ") designs, so on the publication only
+#       36 data generating scenarios are considered
+
+# for data generation, the factors
 # model (M1, M2, M3),
 # noise (N1, N2, N3) and
-# experimental design (D_equ_3_n***, D_equ_4_n***, D_opt_3_n_***, D_opt_4_n***) 
+# experimental design (D_equ_3_n***, D_equ_4_n***, D_opt_3_n_***, D_opt_4_n***)
 #   which considers the aspects:
 #   - spacing ("equ", "opt")
 #   - n_times (3, 4)
-#   - n_obs (72, 216) 
+#   - n_obs (72, 216)
 # is considered. Hence, there are
 # 3*3*2*2*2=72 Data generation scenarios
 
 generate_data <- function(data, job, model_id, noise_id,
-                          # expDes_id,
                           spacing_id,
                           n_times_id,
                           n_obs_id, ...){
-  
+
   stopifnot(model_id %in% c("M1", "M2", "M3"))
   if(model_id == "M1") model <- coef(M1)
   if(model_id == "M2") model <- coef(M2)
   if(model_id == "M3") model <- M3
-  
+
   stopifnot(noise_id %in% c("N1", "N2", "N3"))
-  
-  # stopifnot(expDes_id %in% c("D1a", "D1b", "D2a", "D2b"))
+
   stopifnot(spacing_id %in% c("equ", "opt"))
   stopifnot(n_times_id %in% c(3, 4))
   stopifnot(n_obs_id %in% c(216, 72))
-  
+
   expDes <- designs %>% dplyr::filter(
-    #design == expDes_id,
     spacing == spacing_id,
     n_times == n_times_id,
     n_obs == n_obs_id)
-  
+
   list(stoch_data = generate_data(model = model, noise_id = noise_id, expDes = expDes),
-       model_id = model_id) 
+       model_id = model_id)
 }
 
 addProblem(name = "generate_data", data = NA, fun = generate_data, seed = 42)
@@ -98,8 +95,12 @@ addProblem(name = "generate_data", data = NA, fun = generate_data, seed = 42)
 
 # The algorithms: anova and no_pre #####
 
-# Given a data generating scenario, the method (or algorithm, pipeline)
-# is used for estimating a dose-response relationship and 
+# Note: In the manuscript
+# -"all_joint" was renamed to "single 2pLL" and
+# -"all_sep" was renamed to "separate 2pLL"
+
+# Given a data generating scenario, a method (2-step-pipeline, ...)
+# is used for estimating a dose-response relationship and
 # specifically, the ED50 parameter.
 
 # Considered method for a given, generated data set are:
@@ -111,7 +112,7 @@ addProblem(name = "generate_data", data = NA, fun = generate_data, seed = 42)
 # "no_pre" with:
 #
 # 2.  "all_joint": No pre-test, always a single dose-response curve fitted
-# 3.  "all_sep":   No pre-test, always separate dose-repsonse curves 
+# 3.  "all_sep":   No pre-test, always separate dose-repsonse curves
 #                   (one per exposure time) fitted
 # 4.  "all_td2pLL" No pre-test, always the td2pLL fitted
 
@@ -123,14 +124,14 @@ anova.wrapper = function(data, job, instance, alpha, ...){
       td2pLL::td2pLL_anova(data = instance$stoch_data, alpha = alpha)
     },
     error = function(cond){
-      return(list(MAFC = "error", 
+      return(list(MAFC = "error",
                   MAcc = "error",
                   signif = "error",
                   is_conv = FALSE,
                   ED50s_at_times = "error"))
     }
     )
-  
+
   if(unlist(anova_signif["signif"]) == 1){
     # if differences: fit td2pLLL
     model_fit <- tryCatch(
@@ -138,25 +139,25 @@ anova.wrapper = function(data, job, instance, alpha, ...){
         td2pLL::fit_td2pLL(data = instance$stoch_data)
       },
       error = function(cond){
-        return(list(MAFC = "error", 
+        return(list(MAFC = "error",
                     MAcc = "error",
                     signif = anova_signif["signif"],
                     is_conv = FALSE,
                     ED50s_at_times = "error"))
       }
       )
-    
+
     # return with MAFC = "error", if no final fit
     if(!is.null(model_fit$MAFC)) return(model_fit)
-    
+
     is_conv = model_fit$convInfo$isConv
     # get ED50 at all time values
     ED50s_at_times <- get_ED50s(coefs = coef(model_fit),
                                 times = unique(instance$stoch_data$time)
                                 )
-    
-  } 
-  
+
+  }
+
   if(unlist(anova_signif["signif"]) == 0 | unlist(anova_signif["signif"]) == "error"){
     # if no differences or error: fit joint version (LL2.2 is used!)
     model_fit <- tryCatch(
@@ -171,33 +172,33 @@ anova.wrapper = function(data, job, instance, alpha, ...){
                     ED50s_at_times = "error"))
       }
     )
-    
+
     # return  MAFC = "error", if no final fit
     if(!is.null(model_fit$MAFC)) return(model_fit)
-    
+
     is_conv <- model_fit$fit$convergence
 
-    if(model_fit$fct$name[3] != "LL2.2") 
+    if(model_fit$fct$name[3] != "LL2.2")
       stop("Following code assumes LL2.2, which is not at hand.")
-    
+
     # get ED50 at all time values
     ED50s_at_times <- data.frame(time = unique(instance$stoch_data$time),
                                  ED50 = exp(coef(model_fit)[2]))
   }
 
-  
+
   # compare to true ED50 values
   if(instance$model_id %in% c("M1", "M2")) true_coefs <- coef(get(instance$model_id))
   if(instance$model_id == "M3") true_coefs <- get(instance$model_id)
-  
+
   ED50s_at_times$true_ED <- td2pLL::get_ED50s(coefs = true_coefs, times = ED50s_at_times$time)$ED50
   # Mean Absolute Fold Change
-  MAFC <- mean(abs(log2(ED50s_at_times$ED50 / ED50s_at_times$true_ED))) 
+  MAFC <- mean(abs(log2(ED50s_at_times$ED50 / ED50s_at_times$true_ED)))
   # Mean Acceptable (absolute ratio within [0.9, 1.1] )
   # MAcc <- mean(abs(ED50s_at_times$ED50 / ED50s_at_times$true_ED - 1) < 0.1)
   # Changed to using log2 ratios
   MAcc <- mean(abs(log2(ED50s_at_times$ED50 / ED50s_at_times$true_ED)) < log2(1.1))
-  
+
   return(list(MAFC = MAFC,
               MAcc = MAcc,
               signif = anova_signif["signif"],
@@ -205,21 +206,21 @@ anova.wrapper = function(data, job, instance, alpha, ...){
               ED50s_at_times = ED50s_at_times))
 }
 
-# add the anova algorithm to the experiment 
+# add the anova algorithm to the experiment
 addAlgorithm(name = "anova", fun = anova.wrapper)
 
 # define function for remaining algorithms (methods)
 no_pre.wrapper = function(data, job, instance, always, ...){
-  
+
   stopifnot(always %in% c("td2pLL", "sep", "joint"))
-  
+
   if(always == "td2pLL"){
     model_fit <- tryCatch(
       {
         td2pLL::fit_td2pLL(instance$stoch_data)
       },
       error = function(cond){
-        return(list(MAFC = "error", 
+        return(list(MAFC = "error",
                     MAcc = "error",
                     signif = "no_pre",
                     is_conv = FALSE,
@@ -228,25 +229,26 @@ no_pre.wrapper = function(data, job, instance, always, ...){
     )
     # if MAFC=="error" return without MAFC calculation
     if(!is.null(model_fit$MAFC)) return(model_fit)
-    
+
     is_conv = model_fit$convInfo$isConv
     # get ED50 at all time_values
     ED50s_at_times <- get_ED50s(coefs = coef(model_fit),
                                 times = unique(instance$stoch_data$time)
     )
   }
-  
-  # "sep" uses LL2.2, too! 
+
+  # "sep" uses LL2.2, too!
   if(always == "sep"){
     model_fit <- tryCatch(
       {
         # Do NOT use td2pLL:::fit_sep_2pLL(), because it shares the h !
         # But here, we want completely separated curve fits.
+        # fit_sep_2pLL is loaded from ./00_functions/functions.R
         fit_sep_2pLL(data = instance$stoch_data)
       },
       error = function(cond){
         return(
-          list(MAFC = "error", 
+          list(MAFC = "error",
                MAcc = "error",
                signif = "no_pre",
                is_conv = FALSE,
@@ -257,9 +259,9 @@ no_pre.wrapper = function(data, job, instance, always, ...){
     if(!is.null(model_fit$MAFC)) return(model_fit)
 
     is_conv <- model_fit$fit$convergence
-    
-    
-    # get ED50 related parameters of the seperate model:
+
+
+    # get ED50 related parameters of the separate model:
     if(model_fit$fct$name != "LL2.2")
       stop("Following code assumes LL2.2")
     ED50s_pre <- coef(model_fit)[grep("e:", names(coef(model_fit)), value = T) ]
@@ -267,7 +269,7 @@ no_pre.wrapper = function(data, job, instance, always, ...){
     ED50s_at_times <- data.frame(time = unique(instance$stoch_data$time),
                                  ED50 = ED50s, row.names = NULL)
   }
-  
+
   # joint uses LL2.2
   if(always == "joint"){
     model_fit <- tryCatch(
@@ -285,28 +287,28 @@ no_pre.wrapper = function(data, job, instance, always, ...){
       }
     )
     if(!is.null(model_fit$MAFC)) return(model_fit)
-    
+
     is_conv <- model_fit$fit$convergence
     if(model_fit$fct$name[3] != "LL2.2")
       stop("Following code assumes LL2.2")
     ED50s_at_times <- data.frame(time = unique(instance$stoch_data$time),
                                  ED50 = exp(coef(model_fit)[2]), row.names = NULL)
-    
+
   }
-  
+
   # compare to true ED50 values
   if(instance$model_id %in% c("M1", "M2")) true_coefs <- coef(get(instance$model_id))
   if(instance$model_id == "M3") true_coefs <- get(instance$model_id)
-  
+
   ED50s_at_times$true_ED <- get_ED50s(coefs = true_coefs, times = ED50s_at_times$time)$ED50
 
   # Mean Absolute Fold Change
-  MAFC <- mean(abs(log2(ED50s_at_times$ED50 / ED50s_at_times$true_ED))) 
+  MAFC <- mean(abs(log2(ED50s_at_times$ED50 / ED50s_at_times$true_ED)))
   # Mean Acceptable (absolute ratio within [0.9, 1.1] )
   # MAcc <- mean(abs(ED50s_at_times$ED50 / ED50s_at_times$true_ED - 1) < 0.1)
   # Changed to using log2 ratios
   MAcc <- mean(abs(log2(ED50s_at_times$ED50 / ED50s_at_times$true_ED)) < log2(1.1))
-  
+
   return(list(MAFC = MAFC,
               MAcc = MAcc,
               signif = "no_pre",
@@ -333,7 +335,7 @@ pdes = list(generate_data = CJ(model_id = c("M1", "M2", "M3"),
 
 ####################
 # algorithm design #
-#################### 
+####################
 
 ades = list(
   anova = data.table(alpha = 0.05),
@@ -360,7 +362,7 @@ id = head(findExperiments(algo.name = "anova",
                           prob.pars = (model_id == "M1" &
                                          noise_id == "N1" &
                                          spacing_id == "equ" &
-                                         n_times_id == 3 &  
+                                         n_times_id == 3 &
                                          n_obs_id == 216)),
           1)
 
@@ -423,15 +425,15 @@ id = head(findExperiments(algo.name = "no_pre",
                                          n_obs_id == 72)), 1)
 testJob(id = id)
 
-# In case there are errors: Find the corresponding simulation scenario's 
-#   factor levels
+# In case there are errors: Find the corresponding simulation scenario's
+#   factor levels with this
 
 # id = head(findErrors(), 1)
 # getJobPars(id = head(findErrors(), 1))
 
-#####################################
+####################
 # Chunk and submit
-######################################
+####################
 
 # Put the many jobs into chunks to speed up the computing
 
@@ -452,6 +454,7 @@ getStatus()
 ################
 
 # In case you return to the session on a HPC cluster, you may need something like this
+
 # loadRegistry(file.dir = "./04_simulation_run/registry/",
 # writeable = TRUE, conf.file = "/work/smjududa/.batchtools.conf.R")
 
