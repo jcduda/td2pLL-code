@@ -48,7 +48,6 @@ plot_sd_values <- ggplot(data, aes(x = round(dose, 4), y = sd)) +
 
 # plot_sd_values
 
-saveRDS(plot_sd_values, file = "./03_simulation_prep/03_plot_sd_values.rds")
 save(plot_sd_values, file = "./03_simulation_prep/03_plot_sd_values.RData")
 # apparently, the noise rises at first and then declines again,
 # especially at dose = 1
@@ -65,12 +64,10 @@ lm_sd_noise <- lm(sd ~ dose +
                     time,
                   data = data %>% mutate(dose = my_pseudo_log(dose)))
 
-# summary(lm_sd_noise)
-
-saveRDS(lm_sd_noise, file = "./03_simulation_prep/03_lm_sd_noise.rds")
 save(lm_sd_noise, file = "./03_simulation_prep/03_lm_sd_noise.RData")
+
 ###################
-# Look at the model
+# Optional: Look at the model
 ###################
 
 seq_data <- expand.grid(time = c(1, 2, 7),
