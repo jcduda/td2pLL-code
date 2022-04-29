@@ -1,12 +1,33 @@
 
 library(dplyr)
+library(tidyr)
+library(ggrepel)
 library(ggplot2); theme_set(theme_bw())
 library(td2pLL)
 library(DoseFinding)
-setwd("C:/Users/duda/Projekte/exp_dose_resp")
 
-load("./03_simulation_prep/02_true_designs.RData")
+setwd("C:/Users/duda/Projekte/exp_dose_resp_code")
+
 source("./00_functions/functions.R")
+load("./02_data_prep/data_refit_prep.RData")
+load("./03_simulation_prep/02_true_designs.RData")
+load("./03_simulation_prep/03_plot_sd_values.RData")
+load("./03_simulation_prep/03_lm_sd_noise.RData")
+load("./04_simulation_run/results_simulation.RData")
+
+
+
+
+# STOPPED HERE
+
+# TODO:
+# Clean up: figure by figure
+#           - generate ennumerated figure plots
+# Clean up 00_functions/functions. Eventually add individual functions used here
+# to keep this script cleaner.
+#
+# Clean up 02_data_prer: Do we anywhere need .rds objects? Maybe clean up the README there, too.
+
 
 
 # Figure 1
@@ -148,14 +169,6 @@ ggsave("fig_sd_sim.pdf", width = 7.5, height = 2.75, path = "publication_progres
 ################################################################################
 ################################################################################
 
-
-load("C:/Users/duda/Projekte/exp_dose_resp/02_data_prep/data_refit_prep.RData")
-
-library(td2pLL)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(ggrepel)
 
 data_subset <- data_refit_prep %>% filter(compound == "ASP") %>% 
   #filter(Donor == "Don_3") %>%
@@ -454,7 +467,7 @@ ggsave(file = "fig_ex_curves.pdf", plot = arranged_g, width = 6, height = 10,  p
 ##############################################################################################
 
 
-load("./04_simulation_run/results_simulation.RData")
+
 
 results_simulation <-
   results_simulation %>%
