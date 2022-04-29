@@ -52,17 +52,25 @@ of the td2pLL model of Duda et al. (2022) and can be ignored.
 Again, this step is optional as the simulation results are available.
 However, feel free to re-generate them or look at the code.
 
+Open and run the following R-file
+
+- 04_simulation_run/run_simulation.R
+
+The simulation results are saved in
+
+- 04_simulation_run/results.simulation.RData
+
 Note that the simulation was run on a high performance computing (HPC) cluster LiDo 3 of the
-TU Dortmund Unversity with the help of the R package batchtools for convenient batchjob
+TU Dortmund University with the help of the R package batchtools for convenient batchjob
 organization. 
 
 This means that if you run the code on your local computer, it might take very long.
 And if you want to re-run on another HPC cluster, make sure to setup the configuration
 files properly.
 
-Note that in the code, the model M1 means string time-dependency,
+Note that in the code, the model M1 means strong time-dependency,
 M2 is medium/small time-dependency and M3 means no time-dependency.
-The naming was changed in the manuscript.
+The naming was changed for the manuscript, where M2 means strong time dependency, M1 medium/small time-dependency and M0 means no time-dependency.
 
 
 
