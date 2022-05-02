@@ -18,7 +18,7 @@ load("./04_simulation_run/results_simulation.RData")
 
 
 
-# STOPPED HERE
+
 
 # TODO:
 # Clean up: figure by figure
@@ -29,8 +29,11 @@ load("./04_simulation_run/results_simulation.RData")
 # Clean up 02_data_prer: Do we anywhere need .rds objects? Maybe clean up the README there, too.
 
 
+############
+# Figure 1 #
+############
 
-# Figure 1
+# Note: The figures appear in the Viewer and were manually exported and saved.
 
 # 1a
 plot_td2pLL(td2pLL_coefs = c(h = 2, delta = 0.1, gamma = 2, c0 = 0.01),
@@ -51,19 +54,23 @@ plot_td2pLL(td2pLL_coefs = c(h = 2, delta = 0.1, gamma = 4, c0 = 0.1),
             xaxis_title = "Concentration", yaxis_title = "Exposure duration")
 
 
-###############################################################################
-###############################################################################
+#############
 ## Figure 2
 #############
 
+
+# function: get_2pll_at_t
+#
+# --> a small helper function
+#
+# From a td2pLL model specified through "coef",
+# get the response values at "dose" and a fixed time "time"
 
 get_2pll_at_t <- function(dose, time, coefs){
   ED50 <- get_ED50s(coefs = coefs, times = time)$ED50
   res <- sigEmax(dose, e0 = 100, eMax = -100, ed50 = ED50, h = coefs["h"])
   return(unname(res))
 }
-
-get_2pll_at_t(0.01, time = 100, coefs = c(h = 2, delta = 0.1, gamma= 4, c0 = 0.01))
 
 
 ggplot(data = NULL) +
@@ -114,14 +121,15 @@ ggplot(data = NULL) +
         plot.margin = margin(0, 10, 0, 1)) +
   guides(colour = guide_legend(override.aes = list(size = unit(2, "cm"))))
 
-ggsave(filename = "./publication_progress/Figures/fig_explain_model_2.tiff",
+ggsave(filename = "./05_results/fig_2_explain_model_2.tiff",
        width = 5, height = 4)
-ggsave(filename = "./publication_progress/Figures/fig_explain_model_2.pdf",
+ggsave(filename = "./05_results/fig_2_explain_model_2.pdf",
        width = 5, height = 4)
 
 ###############################################################################
 ###############################################################################
 
+# STOPPED HERE
 
 # Export manually into jpegs
 
