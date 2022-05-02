@@ -15,7 +15,7 @@ library(drc)
 
 # To install the td2pLL package:
 library(devtools)
-devtools::install_github("jcduda/td2pLL")
+# devtools::install_github("jcduda/td2pLL")
 library(td2pLL)
 
 
