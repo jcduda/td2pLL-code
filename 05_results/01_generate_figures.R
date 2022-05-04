@@ -20,12 +20,8 @@ load("./04_simulation_run/results_simulation.RData")
 data(cytotox) # loaded through td2pLL package
 
 # TODO:
-# Clean up: figure by figure
-#           - generate ennumerated figure plots
-# Clean up 00_functions/functions. Eventually add individual functions used here
-# to keep this script cleaner.
-#
-# Clean up 02_data_prer: Do we anywhere need .rds objects? Maybe clean up the README there, too.
+# Generate the figure that was proposed by the reviewer and re-name the figure numbers.
+
 
 
 ############
@@ -141,8 +137,6 @@ plot(M1, xaxis_scale = "log", xaxis_title = "Concentration",
 ## Figure 4
 #############
 
-
-
 my_plot_designs(designs = designs %>% filter(n_obs == 216,
                                              spacing == "equ") %>%
                   mutate(pt_size = ifelse(n == 12, 5, 4),
@@ -155,7 +149,6 @@ ggsave("./05_results/fig_4_expDes_sim.pdf", width = 5, height = 2.75)
 ## Figure 5
 #############
 
-
 plot_sd_values +
   labs(x = expression(Concentration~x[j]))
 
@@ -165,7 +158,6 @@ ggsave("./05_results/fig_5_sd_sim.pdf", width = 7.5, height = 2.75)
 ##################
 ## Figure 7 and 6
 ##################
-
 
 # Figure 7
 
@@ -254,7 +246,6 @@ ggsave("./05_results/fig_6_td2pLL_app.pdf", width = 4, height = 4)
 ## Figure 8
 ############
 
-
 # Selections:
 # PPL, GLC: Separate better
 # LAB: td2pLL looks more stable
@@ -315,7 +306,6 @@ p42 <- plot_td2pLL_2dim(model_list[["DFN"]]$m_fit_td2pLL, sigma_scal = 10) +
 grid.arrange(p11, p12, p21, p22,p31, p32, p41, p42, ncol=2)
 
 arranged_g <- arrangeGrob(p11, p12, p21, p22,p31, p32, p41, p42, ncol=2) #generates g
-
 
 ggsave(file = "./05_results/fig_8_ex_curves.pdf", plot = arranged_g, width = 6, height = 10)
 

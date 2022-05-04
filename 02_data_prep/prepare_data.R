@@ -222,7 +222,6 @@ data_prep <- lapply(compounds, function(compound){
 # Delete rows with missing resp
 data_prep <- data_prep %>% filter(!is.na(resp)) 
 
-saveRDS(data_prep, file="./02_data_prep/data_prep.rds")
 save(data_prep, file = "./02_data_prep/data_prep.RData")
 
 
@@ -302,7 +301,6 @@ data_refit_prep$resp_refit <- (data_refit_prep$resp / data_refit_prep$left_asymp
 # overwrite
 data_refit_prep$resp <- data_refit_prep$resp_refit
 
-saveRDS(data_refit_prep, file="./02_data_prep/data_refit_prep.rds")
 save(data_refit_prep, file="./02_data_prep/data_refit_prep.RData")
 
 
