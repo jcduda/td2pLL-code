@@ -67,50 +67,6 @@ fit_sep_2pLL <- function(data){
 
 
 
-# function: plot_designs
-#           plots the considered experimental designs as a ggplot. 
-#
-# Input:
-# - designs:  data.frame with columns expo, dose, n and design
-#
-# Details:
-#   Right now, inceased doses in a log scale with base sqrt(10) is assumed
-#   for plotting the dose-axes accordingly.
-
-plot_designs <- function(designs){
-
-    
-    l_br <- floor(log10(min(designs$dose[designs$dose > 0])))
-    up_br <- round(log10(max(designs$dose)))
-    
-    break_doses <- c(0, 10^(l_br:up_br))
-    
-    
-    ggplot(data = designs, aes(x = dose, y = time, size = factor(n))) +
-      geom_point(alpha = 0.7, color = "steelblue") +
-      geom_text(aes(label=n), size = 3, hjust=+0.5, vjust=0.5) +
-      scale_x_continuous(trans = scales::pseudo_log_trans(sigma = break_doses[2]/2, base = sqrt(10)),
-                         breaks = break_doses,
-                         labels = round(break_doses, 4)) +
-      labs(y = "exposure time") +
-      guides(size = FALSE) +
-      theme_bw() +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-      facet_wrap(facets = "design", labeller = "label_both")
-  
-}
-
-
-
-# function: my_pseudo_log
-#           Creates a pseudo_log of the doses, so that dose=0
-#           does not hrow an error
-# Input:
-# - x:  positive numeric
-my_pseudo_log <- function(x) asinh(x/(2 * 0.0001))/log(sqrt(10))
-
-
-
 #######################
 # Data generation 
 #######################
@@ -212,3 +168,172 @@ generate_data <- function(model, noise_id, expDes){
   
 }
 
+
+#############################################################################
+# Helper functions for plotting results in 05_results/01_generate_figures.R
+#############################################################################
+
+# function: get_2pll_at_t (a small helper function)
+#
+# From a td2pLL model specified through "coef",
+# get the response values at "dose" and a fixed time "time"
+
+get_2pll_at_t <- function(dose, time, coefs){
+  ED50 <- get_ED50s(coefs = coefs, times = time)$ED50
+  res <- sigEmax(dose, e0 = 100, eMax = -100, ed50 = ED50, h = coefs["h"])
+  return(unname(res))
+}
+
+
+# function: my_plot_designs (small helper function)
+#
+# Visualizes the time-dose design with a ggplot.
+#
+#
+# Input: design (data.frame) which looks like this:
+#
+#   time   dose     n design       n_obs spacing n_times              pt_size
+#   1     1 0         12 D_equ_3_n216   216 equ     3 exposure durations       5
+#   2     1 0.01      12 D_equ_3_n216   216 equ     3 exposure durations       5
+#   3     1 0.0316    12 D_equ_3_n216   216 equ     3 exposure durations       5
+#   4     1 0.1       12 D_equ_3_n216   216 equ     3 exposure durations       5
+#                               ...
+
+my_plot_designs <- function(designs){
+  
+  
+  l_br <- floor(log10(min(designs$dose[designs$dose > 0])))
+  up_br <- round(log10(max(designs$dose)))
+  
+  break_doses <- c(0, 10^(l_br:up_br))
+  
+  
+  ggplot(data = designs, aes(x = dose, y = time, size = pt_size)) +
+    geom_point(alpha = 0.7, size = designs$pt_size, color = "steelblue") +
+    geom_text(aes(label=n), size = 3, hjust=+0.55, vjust=0.4) +
+    scale_x_continuous(trans = scales::pseudo_log_trans(sigma = break_doses[2]/2, base = sqrt(10)),
+                       breaks = break_doses,
+                       labels = round(break_doses, 4)) +
+    scale_y_continuous(breaks = c(1, 2, 4, 7)) +
+    labs(y = "Exposure duration", x = "Concentration") +
+    guides(size = "none") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    facet_wrap(facets = "n_times")
+  
+}
+
+
+# function plot_td2pLL_2dim 
+#
+# Plots a td2pLL_mod object on a regular plot with only a dose-axis and a response-axis.
+# The time-dimension is represented by seperately fitting the marginal dose-response curves at
+# times 1, 2 and 7.
+# This function is not general and only tailored to the situation of the simulation results.
+
+plot_td2pLL_2dim <- function(td2pLL_mod, sigma_scal = sqrt(10)){
+  
+  params <- coef(td2pLL_mod)
+  data <- td2pLL_mod$orig_data %>%
+    group_by(time, dose) %>%
+    summarize(resp = mean(resp)) %>%
+    mutate(Time = as.factor(time))
+  break_doses <- data$dose %>% unique
+  ED50s <- get_ED50s(coefs = params, times = c(1, 2, 7))[,2]
+  
+  my_2pLL_1 <- function(x){
+    100 - 100 * x^params["h"] / (ED50s[1]^params["h"] + x^params["h"])
+  }
+  
+  my_2pLL_2 <- function(x){
+    100 - 100 * x^params["h"] / (ED50s[2]^params["h"] + x^params["h"])
+  }
+  
+  my_2pLL_3 <- function(x){
+    100 - 100 * x^params["h"] / (ED50s[3]^params["h"] + x^params["h"])
+  }
+  
+  p <- ggplot(data = data,
+              aes(x = dose, y = resp, shape = Time, linetype = Time)) +
+    geom_point() +
+    scale_shape_manual(values = c(1, 2, 3)) +
+    scale_x_continuous(trans = scales::pseudo_log_trans(sigma = break_doses[2]/sigma_scal,
+                                                        base = sqrt(10)),
+                       breaks = break_doses,
+                       labels = round(break_doses, 4)) +
+    stat_function(fun = my_2pLL_1) +
+    stat_function(fun = my_2pLL_2, linetype = "dashed") +
+    stat_function(fun = my_2pLL_3, linetype = "dotted") +
+    guides(shape = guide_legend(override.aes = list(shape = c(1, 2, 3),
+                                                    linetype = c(1, 2, 3)))) +
+    labs(x = "Concentration", y = "Response") +
+    theme(legend.position = c(0.9, 0.9),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()) 
+  
+  return(p)
+  
+}
+
+
+# function plot_2pLL
+#
+# Plots a 2pLL model fitted with drc::drm(., curveid = time) in a customized way
+# for visualizing the results.
+# This function is not general but customized to for the figures of the manuscript.
+
+plot_2pLL <- function(LL2_fit, sigma_scal = sqrt(10)){
+  params <- coef(LL2_fit)
+  
+  data <- LL2_fit$origData %>%
+    group_by(time, dose) %>%
+    summarize(resp = mean(resp)) %>%
+    mutate(Time = as.factor(time))
+  
+  break_doses <- data$dose %>% unique
+  
+  ED50_1 <- exp(params["e:(Intercept)"])
+  ED50_2 <- exp(params["e:(Intercept)"] + params["e:time2"])
+  ED50_3 <- exp(params["e:(Intercept)"] + params["e:time7"])
+  
+  h_1 <- params["b:(Intercept)"]
+  h_2 <- params["b:(Intercept)"] + params["b:time2"]
+  h_3 <- params["b:(Intercept)"] + params["b:time7"]
+  
+  my_2pLL_1 <- function(x){
+    100 - 100 * x^h_1 / 
+      (ED50_1^h_1 + x^h_1)
+  }
+  
+  my_2pLL_2 <- function(x){
+    100 - 100 * x^h_2 / 
+      (ED50_2^h_2 + x^h_2)
+  }
+  
+  my_2pLL_3 <- function(x){
+    100 - 100 * x^h_3 / 
+      (ED50_3^h_3 + x^h_3)
+  }
+  
+  p <- ggplot(data = data,
+              aes(x = dose, y = resp, shape = Time, linetype = Time)) +
+    geom_point() +
+    scale_shape_manual(values = c(1, 2, 3)) +
+    scale_x_continuous(trans = scales::pseudo_log_trans(sigma = break_doses[2]/sigma_scal,
+                                                        base = sqrt(10)),
+                       breaks = break_doses,
+                       labels = round(break_doses, 4)) +
+    stat_function(fun = my_2pLL_1) +
+    stat_function(fun = my_2pLL_2, linetype = "dashed") +
+    stat_function(fun = my_2pLL_3, linetype = "dotted") +
+    guides(shape = guide_legend(override.aes = list(shape = c(1, 2, 3),
+                                                    linetype = c(1, 2, 3)))) +
+    labs(x = "Concentration", y = "Response") +
+    theme(legend.position = c(0.9, 0.9),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()) 
+  
+  return(p)
+  
+  
+}

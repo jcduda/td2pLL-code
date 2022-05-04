@@ -5,20 +5,19 @@ library(ggrepel)
 library(ggplot2); theme_set(theme_bw())
 library(td2pLL)
 library(DoseFinding)
+library(gridExtra)
 
 setwd("C:/Users/duda/Projekte/exp_dose_resp_code")
 
 source("./00_functions/functions.R")
 load("./02_data_prep/data_refit_prep.RData")
+load("./03_simulation_prep//01_true_models.RData")
 load("./03_simulation_prep/02_true_designs.RData")
 load("./03_simulation_prep/03_plot_sd_values.RData")
 load("./03_simulation_prep/03_lm_sd_noise.RData")
 load("./04_simulation_run/results_simulation.RData")
 
-
-
-
-
+data(cytotox) # loaded through td2pLL package
 
 # TODO:
 # Clean up: figure by figure
@@ -33,7 +32,8 @@ load("./04_simulation_run/results_simulation.RData")
 # Figure 1 #
 ############
 
-# Note: The figures appear in the Viewer and were manually exported and saved.
+# Note: The figures appear in the Viewer after a second and were manually exported and saved.
+# Within the viewer, you can move the plot interactively.
 
 # 1a
 plot_td2pLL(td2pLL_coefs = c(h = 2, delta = 0.1, gamma = 2, c0 = 0.01),
@@ -57,21 +57,6 @@ plot_td2pLL(td2pLL_coefs = c(h = 2, delta = 0.1, gamma = 4, c0 = 0.1),
 #############
 ## Figure 2
 #############
-
-
-# function: get_2pll_at_t
-#
-# --> a small helper function
-#
-# From a td2pLL model specified through "coef",
-# get the response values at "dose" and a fixed time "time"
-
-get_2pll_at_t <- function(dose, time, coefs){
-  ED50 <- get_ED50s(coefs = coefs, times = time)$ED50
-  res <- sigEmax(dose, e0 = 100, eMax = -100, ed50 = ED50, h = coefs["h"])
-  return(unname(res))
-}
-
 
 ggplot(data = NULL) +
   
@@ -126,69 +111,63 @@ ggsave(filename = "./05_results/fig_2_explain_model_2.tiff",
 ggsave(filename = "./05_results/fig_2_explain_model_2.pdf",
        width = 5, height = 4)
 
-###############################################################################
-###############################################################################
-
-# STOPPED HERE
-
-# Export manually into jpegs
 
 
-my_plot_designs <- function(designs){
-  
-  
-  l_br <- floor(log10(min(designs$dose[designs$dose > 0])))
-  up_br <- round(log10(max(designs$dose)))
-  
-  break_doses <- c(0, 10^(l_br:up_br))
-  
-  
-  ggplot(data = designs, aes(x = dose, y = time, size = pt_size)) +
-    geom_point(alpha = 0.7, size = designs$pt_size, color = "steelblue") +
-    geom_text(aes(label=n), size = 3, hjust=+0.55, vjust=0.4) +
-    scale_x_continuous(trans = scales::pseudo_log_trans(sigma = break_doses[2]/2, base = sqrt(10)),
-                       breaks = break_doses,
-                       labels = round(break_doses, 4)) +
-    scale_y_continuous(breaks = c(1, 2, 4, 7)) +
-    labs(y = "Exposure duration", x = "Concentration") +
-    guides(size = "none") +
-    theme_bw() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-    facet_wrap(facets = "n_times")
-  
-}
+#############
+## Figure 3
+#############
+
+# Note: For the manuscript, the models where renames as follows:
+# 2a: No time-dependency:       M3 (Code) --> M0 (Paper)
+# 2b: Weak time-dependency:     M2 (Code) --> M1 (Paper)
+# 2c: Strong time-dependency:   M1 (Code) --> M2 (Paper)
+#
+# The graphics appear in the Viewer and were exported and cropped manually.
+
+# 3a (No time-dependency)
+plot_td2pLL(M3, dose_lim = c(1e-3, 1), time_lim = c(1, 7),
+            xaxis_title = "Concentration", yaxis_title = "Exposure duration")
+
+# 3b (Weak time-dependency)
+plot(M2, xaxis_scale = "log", xaxis_title = "Concentration",
+     yaxis_title = "Exposure duration", zaxis_title = "Response")
+
+# 3c (Strong time-dependency)
+plot(M1, xaxis_scale = "log", xaxis_title = "Concentration",
+     yaxis_title = "Exposure duration", zaxis_title = "Response")
+
+
+#############
+## Figure 4
+#############
+
+
 
 my_plot_designs(designs = designs %>% filter(n_obs == 216,
                                              spacing == "equ") %>%
                   mutate(pt_size = ifelse(n == 12, 5, 4),
                          n_times = paste0(n_times," exposure durations")))
 
-ggsave("fig_expDes_sim.pdf", width = 5, height = 2.75, path = "publication_progress/Figures/")
+ggsave("./05_results/fig_4_expDes_sim.pdf", width = 5, height = 2.75)
 
 
-load("./03_simulation_prep/03_plot_sd_values.RData")
-load("./03_simulation_prep/03_lm_sd_noise.RData")
+#############
+## Figure 5
+#############
+
+
 plot_sd_values +
   labs(x = expression(Concentration~x[j]))
 
-ggsave("fig_sd_sim.pdf", width = 7.5, height = 2.75, path = "publication_progress/Figures/")
+ggsave("./05_results/fig_5_sd_sim.pdf", width = 7.5, height = 2.75)
 
 
-################################################################################
-################################################################################
+##################
+## Figure 7 and 6
+##################
 
 
-data_subset <- data_refit_prep %>% filter(compound == "ASP") %>% 
-  #filter(Donor == "Don_3") %>%
-  dplyr::select(time, dose, resp)
-
-fit <- fit_td2pLL(data = data_subset)
-plot(fit, add_data = data_subset, xaxis_title = "Concentration",
-     yaxis_title = "Exposure duration", zaxis_title = "Response")
-
-
-
-data(cytotox)
+# Figure 7
 
 all_compounds <- cytotox$compound %>% unique
 app_res <- data.frame(compound = all_compounds,
@@ -200,7 +179,7 @@ app_res <- data.frame(compound = all_compounds,
 model_list <- myList <- vector("list", length(all_compounds))
 names(model_list) <- all_compounds
 
-pdf("publication_progress/Figures/fig_all_compounds.pdf", width = 10, height = 12)
+pdf("./05_results/fig_7_all_compounds.pdf", width = 10, height = 12)
 par(mfrow = c(6, 5), mar = c(3, 3, 1, 0.5), mgp = c(1.75, 0.5, 0))
 i <- 1
 set.seed(1905)
@@ -217,7 +196,7 @@ for(i in 1:nrow(app_res)){
   td2pLL_rse <- sqrt(sum((td2pLL_predict - data_subset$resp)^2) /
                        (nrow(data_subset) - length(coef(m_fit_td2pLL))))
   
-  # seperate
+  # separate
   m_fit_sep <- tryCatch(
     {fit_sep_2pLL(data_subset)},
     error = function(cond) return(NA))
@@ -240,7 +219,6 @@ for(i in 1:nrow(app_res)){
                       (nrow(data_subset) - length(coef(m_fit_joint))))
   
   
-  
   app_res$td2pLL_rse[i] <- td2pLL_rse
   app_res$sep_rse[i] <- sep_rse
   app_res$joint_rse[i] <- joint_rse
@@ -250,7 +228,8 @@ for(i in 1:nrow(app_res)){
 }
 dev.off()
 
-save(model_list, file = "./publication_progress/Figures/model_list.RData")
+
+# Figure 6
 
 # td2pLL vs sep
 app_res %>%
@@ -268,152 +247,21 @@ app_res %>%
         legend.margin=margin(0,0,5,0),
         legend.box.margin=margin(-10,-10,-10,-10))
 
-ggsave("fig_td2pLL_app.pdf", width = 4, height = 4,  path = "publication_progress/Figures/")
+ggsave("./05_results/fig_6_td2pLL_app.pdf", width = 4, height = 4)
 
 
-################################################
-# Compare td2pLL and separate fit
-################################################
+############
+## Figure 8
+############
 
-# Choose CHL
-td2pLL_mod <- model_list$PPL$m_fit_td2pLL
-plot_td2pLL_2dim(td2pLL_mod)
-# plot a td2pLL_fit in a two-dimensional manner
-
-#############################################################
-# plot td2pLL in normal, two-dimensional plot
-#############################################################
-
-plot_td2pLL_2dim <- function(td2pLL_mod, sigma_scal = sqrt(10)){
-  
-  params <- coef(td2pLL_mod)
-  data <- td2pLL_mod$orig_data %>%
-    group_by(time, dose) %>%
-    summarize(resp = mean(resp)) %>%
-    mutate(Time = as.factor(time))
-  break_doses <- data$dose %>% unique
-  ED50s <- get_ED50s(coefs = params, times = c(1, 2, 7))[,2]
-  
-  my_2pLL_1 <- function(x){
-    100 - 100 * x^params["h"] / (ED50s[1]^params["h"] + x^params["h"])
-  }
-  
-  my_2pLL_2 <- function(x){
-    100 - 100 * x^params["h"] / (ED50s[2]^params["h"] + x^params["h"])
-  }
-  
-  my_2pLL_3 <- function(x){
-    100 - 100 * x^params["h"] / (ED50s[3]^params["h"] + x^params["h"])
-  }
-  
-  p <- ggplot(data = data,
-              aes(x = dose, y = resp, shape = Time, linetype = Time)) +
-    geom_point() +
-    scale_shape_manual(values = c(1, 2, 3)) +
-    scale_x_continuous(trans = scales::pseudo_log_trans(sigma = break_doses[2]/sigma_scal,
-                                                        base = sqrt(10)),
-                       breaks = break_doses,
-                       labels = round(break_doses, 4)) +
-    stat_function(fun = my_2pLL_1) +
-    stat_function(fun = my_2pLL_2, linetype = "dashed") +
-    stat_function(fun = my_2pLL_3, linetype = "dotted") +
-    guides(shape = guide_legend(override.aes = list(shape = c(1, 2, 3),
-                                                    linetype = c(1, 2, 3)))) +
-    labs(x = "Concentration", y = "Response") +
-    theme(legend.position = c(0.9, 0.9),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank()) 
-  
-  return(p)
-  
-}
-
-save(plot_td2pLL_2dim, file = "./publication_progress/Figures/fct_plot_td2pLL_2dim.RData")
-
-compound <- "PPL"
-LL2_fit <- model_list[[compound]]$m_fit_sep
-plot_2pLL(LL2_fit)
-# plot a separated (with curveid = time) drm model fit of the LL2.2
-
-#############################################################
-# Custom plot 2pLL in normal, two-dimensional ggplot
-#############################################################
-
-plot_2pLL <- function(LL2_fit, sigma_scal = sqrt(10)){
-  params <- coef(LL2_fit)
-  
-  data <- LL2_fit$origData %>%
-    group_by(time, dose) %>%
-    summarize(resp = mean(resp)) %>%
-    mutate(Time = as.factor(time))
-  
-  break_doses <- data$dose %>% unique
-  
-  ED50_1 <- exp(params["e:(Intercept)"])
-  ED50_2 <- exp(params["e:(Intercept)"] + params["e:time2"])
-  ED50_3 <- exp(params["e:(Intercept)"] + params["e:time7"])
-  
-  h_1 <- params["b:(Intercept)"]
-  h_2 <- params["b:(Intercept)"] + params["b:time2"]
-  h_3 <- params["b:(Intercept)"] + params["b:time7"]
-  
-  my_2pLL_1 <- function(x){
-    100 - 100 * x^h_1 / 
-      (ED50_1^h_1 + x^h_1)
-  }
-  
-  my_2pLL_2 <- function(x){
-    100 - 100 * x^h_2 / 
-      (ED50_2^h_2 + x^h_2)
-  }
-  
-  my_2pLL_3 <- function(x){
-    100 - 100 * x^h_3 / 
-      (ED50_3^h_3 + x^h_3)
-  }
-  
-  p <- ggplot(data = data,
-              aes(x = dose, y = resp, shape = Time, linetype = Time)) +
-    geom_point() +
-    scale_shape_manual(values = c(1, 2, 3)) +
-    scale_x_continuous(trans = scales::pseudo_log_trans(sigma = break_doses[2]/sigma_scal,
-                                                        base = sqrt(10)),
-                       breaks = break_doses,
-                       labels = round(break_doses, 4)) +
-    stat_function(fun = my_2pLL_1) +
-    stat_function(fun = my_2pLL_2, linetype = "dashed") +
-    stat_function(fun = my_2pLL_3, linetype = "dotted") +
-    guides(shape = guide_legend(override.aes = list(shape = c(1, 2, 3),
-                                                    linetype = c(1, 2, 3)))) +
-    labs(x = "Concentration", y = "Response") +
-    theme(legend.position = c(0.9, 0.9),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank()) 
-  
-  return(p)
-  
-  
-}
-
-save(plot_2pLL, file = "./publication_progress/Figures/fct_plot_2pLL.RData")
-
-
-compound <- "CHL"
-
-for(compound in all_compounds) {
-  print(plot_2pLL(model_list[[compound]]$m_fit_sep)  +
-    labs(title = paste0(compound, " (Sep. fit)")))
-  print(plot_td2pLL_2dim(model_list[[compound]]$m_fit_td2pLL) +
-    labs(title = paste0(compound, " (td2pLL. fit)")))
-}
 
 # Selections:
 # PPL, GLC: Separate better
 # LAB: td2pLL looks more stable
 # FAM: No computational problems in td2pLL
-# DFN: td2pLL more stable as ED50 must decrease with time 
+# DFN: td2pLL more stable as ED50 should decrease with time 
 
-require(gridExtra)
+
 
 ## PPL ##
 p11 <- plot_2pLL(model_list[["PPL"]]$m_fit_sep, sigma_scal = 100)  +
@@ -469,13 +317,12 @@ grid.arrange(p11, p12, p21, p22,p31, p32, p41, p42, ncol=2)
 arranged_g <- arrangeGrob(p11, p12, p21, p22,p31, p32, p41, p42, ncol=2) #generates g
 
 
-ggsave(file = "fig_ex_curves.pdf", plot = arranged_g, width = 6, height = 10,  path = "publication_progress/Figures/")
-
-##############################################################################################
-##############################################################################################
+ggsave(file = "./05_results/fig_8_ex_curves.pdf", plot = arranged_g, width = 6, height = 10)
 
 
-
+############
+## Figure 9
+############
 
 results_simulation <-
   results_simulation %>%
@@ -490,8 +337,15 @@ results_simulation <-
   ))
 
 res_conv <- results_simulation %>%
+  # For the manuscript, consider only equally spaced scenarios.
+  # Scenarios with optimal designs were not scope of the manuscript.
+  #
+  # Also, "is_conv ==1" means that only cases where the model fit converged are
+  # considered. 
+  # This is negligible as only 27 of 144000 rows have is_conv == 0, i.e. non.convergence.
   filter(is_conv == 1, spacing_id == "equ") %>%
   mutate(method = case_when(
+    # method names were slightly renamed for the manuscript!
     method == "all_joint" ~ "Single 2pLL",
     method == "all_sep" ~ "Sep. 2pLL",
     method == "all_td2pLL" ~ "Always td2pLL",
@@ -503,6 +357,7 @@ res_conv <- results_simulation %>%
     noise_id == "N3" ~ "Large (N3)"
   ),
   model_id = case_when(
+    # Model names were renamed for the manuscript!
     model_id == "M1" ~ "Large (M2)",
     model_id == "M2" ~ "Small (M1)",
     model_id == "M3" ~ "None (M0)"
@@ -527,4 +382,4 @@ res_conv %>%
         legend.position = "bottom") +
 coord_cartesian(ylim = c(0, 1))
 
-ggsave("fig_sim_res_AMAFC.pdf", width = 6, height = 6,  path = "publication_progress/Figures/")
+ggsave("./05_results/fig_9_sim_res_AMAFC.pdf", width = 6, height = 6)
