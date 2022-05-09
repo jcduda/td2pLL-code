@@ -24,34 +24,9 @@ data(cytotox) # loaded through td2pLL package
 
 
 
-############
-# Figure 1 #
-############
-
-# Note: The figures appear in the Viewer after a second and were manually exported and saved.
-# Within the viewer, you can move the plot interactively.
-
-# 1a
-plot_td2pLL(td2pLL_coefs = c(h = 2, delta = 0.1, gamma = 2, c0 = 0.01),
-            dose_lim = c(0.001, 1), time_lim = c(1, 5), 
-            xaxis_title = "Concentration", yaxis_title = "Exposure duration")
-# 1b
-plot_td2pLL(td2pLL_coefs = c(h = 2, delta = 0.1, gamma = 2, c0 = 0.1),
-            dose_lim = c(0.001, 1), time_lim = c(1, 5), 
-            xaxis_title = "Concentration", yaxis_title = "Exposure duration")
-# 1c
-plot_td2pLL(td2pLL_coefs = c(h = 2, delta = 0.1, gamma = 4, c0 = 0.01),
-            dose_lim = c(0.001, 1), time_lim = c(1, 5), 
-            xaxis_title = "Concentration", yaxis_title = "Exposure duration")
-
-# 1d
-plot_td2pLL(td2pLL_coefs = c(h = 2, delta = 0.1, gamma = 4, c0 = 0.1),
-            dose_lim = c(0.001, 1), time_lim = c(1, 5), 
-            xaxis_title = "Concentration", yaxis_title = "Exposure duration")
-
 
 #############
-## Figure 2
+## Figure 1
 #############
 
 ggplot(data = NULL) +
@@ -102,15 +77,63 @@ ggplot(data = NULL) +
         plot.margin = margin(0, 10, 0, 1)) +
   guides(colour = guide_legend(override.aes = list(size = unit(2, "cm"))))
 
-ggsave(filename = "./05_results/fig_2_explain_model_2.tiff",
+ggsave(filename = "./05_results/fig_1_explain_model_2.tiff",
        width = 5, height = 4)
-ggsave(filename = "./05_results/fig_2_explain_model_2.pdf",
+ggsave(filename = "./05_results/fig_1_explain_model_2.pdf",
        width = 5, height = 4)
+
+
+############
+# Figure 2 #
+############
+
+# Note: The figures appear in the Viewer after a second and were manually exported and saved.
+# Within the viewer, you can move the plot interactively.
+
+# 2a
+plot_td2pLL(td2pLL_coefs = c(h = 2, delta = 0.1, gamma = 2, c0 = 0.01),
+            dose_lim = c(0.001, 1), time_lim = c(1, 5), 
+            xaxis_title = "Concentration", yaxis_title = "Exposure duration")
+# 2b
+plot_td2pLL(td2pLL_coefs = c(h = 2, delta = 0.1, gamma = 2, c0 = 0.1),
+            dose_lim = c(0.001, 1), time_lim = c(1, 5), 
+            xaxis_title = "Concentration", yaxis_title = "Exposure duration")
+# 2c
+plot_td2pLL(td2pLL_coefs = c(h = 2, delta = 0.1, gamma = 4, c0 = 0.01),
+            dose_lim = c(0.001, 1), time_lim = c(1, 5), 
+            xaxis_title = "Concentration", yaxis_title = "Exposure duration")
+
+# 2d
+plot_td2pLL(td2pLL_coefs = c(h = 2, delta = 0.1, gamma = 4, c0 = 0.1),
+            dose_lim = c(0.001, 1), time_lim = c(1, 5), 
+            xaxis_title = "Concentration", yaxis_title = "Exposure duration")
+
 
 
 
 #############
 ## Figure 3
+#############
+
+png("./05_results/fig_3_pipeline1.png", width = 400, height = 400)
+par(mfrow = c(1,1), mar = c(0.1, 0.1, 0.1, 0.1))
+curve(sigEmax(dose = x, e0 = 100, eMax = -100, h = 3, ed50 = 4), from = 0.1, to = 10,
+      log = "x", xaxt = "n", yaxt = "n", xlab = "", ylab = "", lwd = 5, col = "grey",
+      ylim = c(0, 100))
+curve(sigEmax(dose = x, e0 = 100, eMax = -100, h = 3, ed50 = 1), from = 0.1, to = 10,
+      log = "x", add = TRUE, col = "grey", lwd = 5)
+curve(sigEmax(dose = x, e0 = 100, eMax = -100, h = 3, ed50 = 0.3), from = 0.1, to = 10,
+      log = "x", add = TRUE, col = "grey", lwd = 5)
+arrows(x0 = 0.3, x1 = 1, y0 = 50, y1 = 50, code = 3, angle = 20, length = 0.1, lwd = 5,
+       lty = 1)
+arrows(x0 = 1, x1 = 4, y0 = 50, y1 = 50, code = 3, angle = 20, length = 0.1, lwd = 5,
+       lty = 1)
+text(x = 0.45, y = 65, label = "?", cex = 5)
+text(x = 2, y = 65, label = "?", cex = 5)
+dev.off()
+
+#############
+## Figure 4
 #############
 
 # Note: For the manuscript, the models where renames as follows:
@@ -120,21 +143,21 @@ ggsave(filename = "./05_results/fig_2_explain_model_2.pdf",
 #
 # The graphics appear in the Viewer and were exported and cropped manually.
 
-# 3a (No time-dependency)
+# 4a (No time-dependency)
 plot_td2pLL(M3, dose_lim = c(1e-3, 1), time_lim = c(1, 7),
             xaxis_title = "Concentration", yaxis_title = "Exposure duration")
 
-# 3b (Weak time-dependency)
+# 4b (Weak time-dependency)
 plot(M2, xaxis_scale = "log", xaxis_title = "Concentration",
      yaxis_title = "Exposure duration", zaxis_title = "Response")
 
-# 3c (Strong time-dependency)
+# 4c (Strong time-dependency)
 plot(M1, xaxis_scale = "log", xaxis_title = "Concentration",
      yaxis_title = "Exposure duration", zaxis_title = "Response")
 
 
 #############
-## Figure 4
+## Figure 5
 #############
 
 my_plot_designs(designs = designs %>% filter(n_obs == 216,
@@ -142,24 +165,24 @@ my_plot_designs(designs = designs %>% filter(n_obs == 216,
                   mutate(pt_size = ifelse(n == 12, 5, 4),
                          n_times = paste0(n_times," exposure durations")))
 
-ggsave("./05_results/fig_4_expDes_sim.pdf", width = 5, height = 2.75)
+ggsave("./05_results/fig_5_expDes_sim.pdf", width = 5, height = 2.75)
 
 
 #############
-## Figure 5
+## Figure 6
 #############
 
 plot_sd_values +
   labs(x = expression(Concentration~x[j]))
 
-ggsave("./05_results/fig_5_sd_sim.pdf", width = 7.5, height = 2.75)
+ggsave("./05_results/fig_6_sd_sim.pdf", width = 7.5, height = 2.75)
 
 
-##################
-## Figure 7 and 6
-##################
+#############################
+## Figure A1 (appendix) and 7
+#############################
 
-# Figure 7
+# Figure A1
 
 all_compounds <- cytotox$compound %>% unique
 app_res <- data.frame(compound = all_compounds,
@@ -171,7 +194,7 @@ app_res <- data.frame(compound = all_compounds,
 model_list <- myList <- vector("list", length(all_compounds))
 names(model_list) <- all_compounds
 
-pdf("./05_results/fig_7_all_compounds.pdf", width = 10, height = 12)
+pdf("./05_results/fig_A1_all_compounds.pdf", width = 10, height = 12)
 par(mfrow = c(6, 5), mar = c(3, 3, 1, 0.5), mgp = c(1.75, 0.5, 0))
 i <- 1
 set.seed(1905)
@@ -221,7 +244,7 @@ for(i in 1:nrow(app_res)){
 dev.off()
 
 
-# Figure 6
+# Figure 7
 
 # td2pLL vs sep
 app_res %>%
@@ -239,7 +262,7 @@ app_res %>%
         legend.margin=margin(0,0,5,0),
         legend.box.margin=margin(-10,-10,-10,-10))
 
-ggsave("./05_results/fig_6_td2pLL_app.pdf", width = 4, height = 4)
+ggsave("./05_results/fig_7_td2pLL_app.pdf", width = 4, height = 4)
 
 
 ############
@@ -373,3 +396,9 @@ res_conv %>%
 coord_cartesian(ylim = c(0, 1))
 
 ggsave("./05_results/fig_9_sim_res_AMAFC.pdf", width = 6, height = 6)
+
+
+
+
+
+
