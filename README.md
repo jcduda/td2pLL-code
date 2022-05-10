@@ -47,7 +47,7 @@ For details and the genrated files, open the 03_simulation_prep/README.txt.
 Note: The optimal design considerations were not of interest for the publication
 of the td2pLL model of Duda et al. (2022) and can be ignored.
 
-## Step 4: Run the simulation (Optional)
+## Step 4: Run the simulation 
 
 Again, this step is optional as the simulation results are available.
 However, feel free to re-generate them or look at the code.
@@ -71,6 +71,13 @@ files properly.
 Note that in the code, the model M1 means strong time-dependency,
 M2 is medium/small time-dependency and M3 means no time-dependency.
 The naming was changed for the manuscript, where M2 means strong time dependency, M1 medium/small time-dependency and M0 means no time-dependency.
+
+## Step 5: Generate the figures 
+
+To recreate all figures from the publication, open and run the following R-file
+
+- 05_results/01_generate_figures.R.
+
 
 
 

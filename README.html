@@ -207,12 +207,27 @@ pre code {
 <p>For details and the genrated files, open the 03_simulation_prep/README.txt.</p>
 <p>Note: The optimal design considerations were not of interest for the publication of the td2pLL model of Duda et al. (2022) and can be ignored.</p>
 </div>
-<div id="step-4-run-the-simulation-optional" class="section level2">
-<h2>Step 4: Run the simulation (Optional)</h2>
-<p>Again, this step is optional as the simulation results are available. However, fell free to re-generate them or look at the code.</p>
-<p>Note that the simulation was run on a high performance computing (HPC) cluster LiDo 3 of the TU Dortmund Unversity with the help of the R package batchtools for convenient batchjob organization.</p>
+<div id="step-4-run-the-simulation" class="section level2">
+<h2>Step 4: Run the simulation</h2>
+<p>Again, this step is optional as the simulation results are available. However, feel free to re-generate them or look at the code.</p>
+<p>Open and run the following R-file</p>
+<ul>
+<li>04_simulation_run/run_simulation.R</li>
+</ul>
+<p>The simulation results are saved in</p>
+<ul>
+<li>04_simulation_run/results.simulation.RData</li>
+</ul>
+<p>Note that the simulation was run on a high performance computing (HPC) cluster LiDo 3 of the TU Dortmund University with the help of the R package batchtools for convenient batchjob organization.</p>
 <p>This means that if you run the code on your local computer, it might take very long. And if you want to re-run on another HPC cluster, make sure to setup the configuration files properly.</p>
-<p>Note that in the code, the model M1 means string time-dependency, M2 is medium/small time-dependency and M3 means no time-dependency. The naming was changed in the manuscript.</p>
+<p>Note that in the code, the model M1 means strong time-dependency, M2 is medium/small time-dependency and M3 means no time-dependency. The naming was changed for the manuscript, where M2 means strong time dependency, M1 medium/small time-dependency and M0 means no time-dependency.</p>
+</div>
+<div id="step-5-generate-the-figures" class="section level2">
+<h2>Step 5: Generate the figures</h2>
+<p>To recreate all figures from the publication, open and run the following R-file</p>
+<ul>
+<li>05_results/01_generate_figures.R.</li>
+</ul>
 </div>
 </div>
 
